@@ -1,0 +1,97 @@
+/* ========== CSS Reset ========== */
+
+/* 1. 盒子模型 */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* 2. 外边距和内边距重置 */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+}
+
+/* 3. 默认字体 */
+html {
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    min-height: 100vh;
+}
+
+/* 4. 列表样式 */
+ul, ol {
+    list-style: none;
+}
+
+/* 5. 链接样式 */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    color: var(--color-primary);
+}
+
+/* 6. 图像 */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* 7. 表格 */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* 8. 表单元素 */
+button, input, select, textarea {
+    font-family: inherit;
+    font-size: 100%;
+    border: none;
+    outline: none;
+    background: none;
+}
+
+button {
+    cursor: pointer;
+}
+
+/* 9. 块级元素 */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+
+/* 10. 隐藏元素 */
+[hidden] {
+    display: none !important;
+}
+
+/* 11. 清除浮动 */
+.clearfix::after {
+    content: '';
+    display: table;
+    clear: both;
+}

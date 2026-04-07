@@ -10,6 +10,18 @@ const App = (function() {
     const $$ = (selector) => document.querySelectorAll(selector);
 
     /**
+     * HTML 转义，防止 XSS 攻击
+     * @param {string} text - 原始文本
+     * @returns {string} 转义后的文本
+     */
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
      * 初始化应用
      */
     function init() {
@@ -232,24 +244,24 @@ const App = (function() {
 
         return `
             <li class="product-card">
-                <a href="product.html?id=${product.id}" class="product-image">
-                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                <a href="product.html?id=${escapeHtml(product.id)}" class="product-image">
+                    <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">
                     ${discount > 0 ? `<span class="product-discount">${discount}%</span>` : ''}
-                    ${product.tags.map(tag => `<span class="product-tag">${tag}</span>`).join('')}
+                    ${product.tags.map(tag => `<span class="product-tag">${escapeHtml(tag)}</span>`).join('')}
                 </a>
                 <div class="product-info">
                     <h3 class="product-name">
-                        <a href="product.html?id=${product.id}">${product.name}</a>
+                        <a href="product.html?id=${escapeHtml(product.id)}">${escapeHtml(product.name)}</a>
                     </h3>
                     <div class="product-price">
                         <span class="price-current">¥${product.price.toFixed(2)}</span>
                         ${product.originalPrice ? `<span class="price-original">¥${product.originalPrice.toFixed(2)}</span>` : ''}
                     </div>
                     <div class="product-meta">
-                        <span class="product-sales">销量 ${product.sales}</span>
+                        <span class="product-sales">销量 ${escapeHtml(product.sales)}</span>
                         <span class="product-rating">★ ${product.rating}</span>
                     </div>
-                    <button class="btn btn-primary btn-sm btn-add-cart" data-product-id="${product.id}">加入购物车</button>
+                    <button class="btn btn-primary btn-sm btn-add-cart" data-product-id="${escapeHtml(product.id)}">加入购物车</button>
                 </div>
             </li>
         `;
@@ -412,19 +424,19 @@ const App = (function() {
             <div class="product-detail-grid">
                 <div class="product-gallery">
                     <div class="gallery-main">
-                        <img src="${product.images[0]}" alt="${product.name}" id="mainImage">
+                        <img src="${escapeHtml(product.images[0])}" alt="${escapeHtml(product.name)}" id="mainImage">
                     </div>
                     <ul class="gallery-thumbs">
                         ${product.images.map((img, index) => `
                             <li class="${index === 0 ? 'active' : ''}">
-                                <img src="${img}" alt="缩略图${index + 1}" data-image="${img}">
+                                <img src="${escapeHtml(img)}" alt="缩略图${index + 1}" data-image="${escapeHtml(img)}">
                             </li>
                         `).join('')}
                     </ul>
                 </div>
                 <div class="product-detail-info">
-                    <h1 class="product-detail-name">${product.name}</h1>
-                    <div class="product-detail-desc">${product.description}</div>
+                    <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
+                    <div class="product-detail-desc">${escapeHtml(product.description)}</div>
                     <div class="product-detail-price">
                         <span class="price-current">¥${product.price.toFixed(2)}</span>
                         ${product.originalPrice ? `
@@ -433,9 +445,9 @@ const App = (function() {
                         ` : ''}
                     </div>
                     <div class="product-detail-meta">
-                        <span>销量 ${product.sales}</span>
+                        <span>销量 ${escapeHtml(product.sales)}</span>
                         <span>★ ${product.rating}</span>
-                        <span>库存 ${product.stock}</span>
+                        <span>库存 ${escapeHtml(product.stock)}</span>
                     </div>
 
                     <div class="product-options">
@@ -443,7 +455,7 @@ const App = (function() {
                             <label class="option-label">颜色</label>
                             <div class="option-buttons">
                                 ${product.colors.map((color, index) => `
-                                    <button class="option-btn ${index === 0 ? 'active' : ''}" data-type="color" data-value="${color}">${color}</button>
+                                    <button class="option-btn ${index === 0 ? 'active' : ''}" data-type="color" data-value="${escapeHtml(color)}">${escapeHtml(color)}</button>
                                 `).join('')}
                             </div>
                         </div>
@@ -451,7 +463,7 @@ const App = (function() {
                             <label class="option-label">尺码</label>
                             <div class="option-buttons">
                                 ${product.sizes.map((size, index) => `
-                                    <button class="option-btn ${index === 0 ? 'active' : ''}" data-type="size" data-value="${size}">${size}</button>
+                                    <button class="option-btn ${index === 0 ? 'active' : ''}" data-type="size" data-value="${escapeHtml(size)}">${escapeHtml(size)}</button>
                                 `).join('')}
                             </div>
                         </div>
@@ -475,7 +487,6 @@ const App = (function() {
 
         // 绑定事件
         const selectedOptions = { color: product.colors[0], size: product.sizes[0] };
-        let quantity = 1;
 
         // 颜色/尺码选择
         $$('.option-btn').forEach(btn => {
@@ -488,27 +499,29 @@ const App = (function() {
             });
         });
 
-        // 数量调整
+        // 数量调整 - 使用单一数据源 qtyInput.value
         const qtyInput = $('#qtyInput');
         $('#qtyMinus')?.addEventListener('click', () => {
-            if (qtyInput.value > 1) {
-                qtyInput.value = --quantity;
+            let val = parseInt(qtyInput.value) || 1;
+            if (val > 1) {
+                qtyInput.value = val - 1;
             }
         });
         $('#qtyPlus')?.addEventListener('click', () => {
-            if (qtyInput.value < product.stock) {
-                qtyInput.value = ++quantity;
+            let val = parseInt(qtyInput.value) || 1;
+            if (val < product.stock) {
+                qtyInput.value = val + 1;
             }
         });
         qtyInput?.addEventListener('change', () => {
             let val = parseInt(qtyInput.value) || 1;
             val = Math.max(1, Math.min(val, product.stock));
             qtyInput.value = val;
-            quantity = val;
         });
 
         // 加入购物车
         $('#addToCartBtn')?.addEventListener('click', () => {
+            const quantity = parseInt(qtyInput.value) || 1;
             CartModule.add(product, quantity, selectedOptions);
             updateCartCount();
             showToast('已加入购物车');
@@ -516,6 +529,7 @@ const App = (function() {
 
         // 立即购买
         $('#buyNowBtn')?.addEventListener('click', () => {
+            const quantity = parseInt(qtyInput.value) || 1;
             CartModule.add(product, quantity, selectedOptions);
             updateCartCount();
             window.location.href = 'checkout.html';
@@ -580,15 +594,15 @@ const App = (function() {
                     </div>
                     <ul class="cart-items">
                         ${cartItems.map(item => `
-                            <li class="cart-item" data-id="${item.id}" data-options='${JSON.stringify(item.options)}'>
+                            <li class="cart-item" data-id="${escapeHtml(item.id)}" data-options='${escapeHtml(JSON.stringify(item.options))}'>
                                 <label>
                                     <input type="checkbox" class="item-checkbox" checked>
                                 </label>
                                 <div class="cart-item-info">
-                                    <img src="${item.image}" alt="${item.name}">
+                                    <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
                                     <div>
-                                        <a href="product.html?id=${item.id}">${item.name}</a>
-                                        <p class="cart-item-options">${item.options.color || ''} ${item.options.size || ''}</p>
+                                        <a href="product.html?id=${escapeHtml(item.id)}">${escapeHtml(item.name)}</a>
+                                        <p class="cart-item-options">${escapeHtml(item.options.color || '')} ${escapeHtml(item.options.size || '')}</p>
                                     </div>
                                 </div>
                                 <div class="cart-item-price">¥${item.price.toFixed(2)}</div>
@@ -632,13 +646,18 @@ const App = (function() {
 
                 if (btn.dataset.action === 'plus') {
                     qty++;
-                } else {
-                    qty--;
-                }
-
-                if (qty > 0) {
                     CartModule.update(id, qty, options);
                     renderCart();
+                } else {
+                    // 数量减少到 0 时移除商品
+                    if (qty <= 1) {
+                        CartModule.remove(id, options);
+                        updateCartCount();
+                        renderCart();
+                    } else {
+                        CartModule.update(id, qty - 1, options);
+                        renderCart();
+                    }
                 }
             });
         });
@@ -695,10 +714,10 @@ const App = (function() {
 
         orderItems.innerHTML = cartItems.map(item => `
             <div class="order-item">
-                <img src="${item.image}" alt="${item.name}">
+                <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
                 <div class="order-item-info">
-                    <span class="order-item-name">${item.name}</span>
-                    <span class="order-item-options">${item.options.color || ''} ${item.options.size || ''}</span>
+                    <span class="order-item-name">${escapeHtml(item.name)}</span>
+                    <span class="order-item-options">${escapeHtml(item.options.color || '')} ${escapeHtml(item.options.size || '')}</span>
                 </div>
                 <div class="order-item-price">¥${item.price.toFixed(2)}</div>
                 <div class="order-item-qty">x${item.quantity}</div>
@@ -739,9 +758,9 @@ const App = (function() {
         $('#submitOrderBtn')?.addEventListener('click', () => {
             const receiverName = $('#receiverName')?.value.trim();
             const receiverPhone = $('#receiverPhone')?.value.trim();
-            const addressDetail = $('#addressDetail')?.value.trim();
+            const receiverAddress = $('#receiverAddress')?.value.trim();
 
-            if (!receiverName || !receiverPhone || !addressDetail) {
+            if (!receiverName || !receiverPhone || !receiverAddress) {
                 showToast('请填写完整的收货信息');
                 return;
             }
@@ -764,7 +783,7 @@ const App = (function() {
                 receiver: {
                     name: receiverName,
                     phone: receiverPhone,
-                    address: addressDetail
+                    address: receiverAddress
                 },
                 paymentMethod: paymentMethod,
                 status: 'paid'
@@ -807,7 +826,7 @@ const App = (function() {
         });
 
         // 登录表单
-        $('#loginForm')?.addEventListener('submit', (e) => {
+        $('#loginForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = $('#loginUsername')?.value.trim();
             const password = $('#loginPassword')?.value;
@@ -817,7 +836,7 @@ const App = (function() {
                 return;
             }
 
-            const result = AuthModule.login(username, password);
+            const result = await AuthModule.login(username, password);
 
             if (result.success) {
                 showToast('登录成功！');
@@ -830,7 +849,7 @@ const App = (function() {
         });
 
         // 注册表单
-        $('#registerForm')?.addEventListener('submit', (e) => {
+        $('#registerForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = $('#regUsername')?.value.trim();
             const phone = $('#regPhone')?.value.trim();
@@ -843,7 +862,7 @@ const App = (function() {
                 return;
             }
 
-            const result = AuthModule.register({
+            const result = await AuthModule.register({
                 username,
                 phone,
                 password,
@@ -961,14 +980,14 @@ const App = (function() {
         orderList.innerHTML = orders.map(order => `
             <div class="order-card">
                 <div class="order-card-header">
-                    <span class="order-id">订单号：${order.id}</span>
-                    <span class="badge ${statusMap[order.status]?.class || ''}">${statusMap[order.status]?.text || order.status}</span>
+                    <span class="order-id">订单号：${escapeHtml(order.id)}</span>
+                    <span class="badge ${statusMap[order.status]?.class || ''}">${statusMap[order.status]?.text || escapeHtml(order.status)}</span>
                 </div>
                 <div class="order-card-items">
                     ${order.items.map(item => `
                         <div class="order-product">
-                            <img src="${item.image}" alt="${item.name}">
-                            <span class="order-product-name">${item.name}</span>
+                            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+                            <span class="order-product-name">${escapeHtml(item.name)}</span>
                             <span class="order-product-price">¥${item.price.toFixed(2)}</span>
                             <span class="order-product-qty">x${item.quantity}</span>
                         </div>
@@ -976,7 +995,7 @@ const App = (function() {
                 </div>
                 <div class="order-card-footer">
                     <span class="order-total">合计：¥${order.total.toFixed(2)}</span>
-                    ${order.status === 'pending' ? `<button class="btn btn-primary btn-sm pay-order-btn" data-order-id="${order.id}">去支付</button>` : ''}
+                    ${order.status === 'pending' ? `<button class="btn btn-primary btn-sm pay-order-btn" data-order-id="${escapeHtml(order.id)}">去支付</button>` : ''}
                 </div>
             </div>
         `).join('');
